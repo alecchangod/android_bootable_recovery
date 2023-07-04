@@ -669,6 +669,10 @@ void TWPartition::Setup_Data_Partition(bool Display_Error) {
 	UnMount(false);
 
 #ifdef TW_INCLUDE_CRYPTO
+	#ifdef OF_FIX_DECRYPTION_ON_DATA_MEDIA
+	if (datamedia)
+		Setup_Data_Media();
+	#endif
 	#ifdef TW_PREPARE_DATA_MEDIA_EARLY
 	if (datamedia)
 		Setup_Data_Media();
@@ -680,6 +684,10 @@ void TWPartition::Setup_Data_Partition(bool Display_Error) {
 		Set_FBE_Status();
 		Decrypted_Block_Device = crypto_blkdev;
 		LOGINFO("Data already decrypted, new block device: '%s'\n", crypto_blkdev);
+		#ifndef OF_FIX_DECRYPTION_ON_DATA_MEDIA
+		if (datamedia)
+			Setup_Data_Media();
+		#endif
 		#ifndef TW_PREPARE_DATA_MEDIA_EARLY
 		if (datamedia)
 			Setup_Data_Media();
@@ -725,6 +733,10 @@ void TWPartition::Setup_Data_Partition(bool Display_Error) {
 				LOGERR("Unable to decrypt FBE device\n");
 		} else {
 			DataManager::SetValue(TW_IS_ENCRYPTED, 0);
+			#ifndef OF_FIX_DECRYPTION_ON_DATA_MEDIA
+			if (datamedia)
+				Setup_Data_Media();
+			#endif
 			#ifndef TW_PREPARE_DATA_MEDIA_EARLY
 			if (datamedia)
 				Setup_Data_Media();
@@ -1249,6 +1261,11 @@ void TWPartition::Setup_Data_Media() {
 			Make_Dir("/sdcard", false);
 			Symlink_Mount_Point = "/sdcard";
 		}
+		#ifdef OF_FIX_DECRYPTION_ON_DATA_MEDIA
+		if (Mount(false) && TWFunc::Path_Exists(Mount_Point + "/media/0")) {
+		#else
+		if (TWFunc::Path_Exists(Mount_Point + "/media/0")) {
+		#endif
 		#ifdef TW_PREPARE_DATA_MEDIA_EARLY
 		if (Mount(false) && TWFunc::Path_Exists(Mount_Point + "/media/0")) {
 		#else
